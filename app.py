@@ -409,7 +409,7 @@ class HowItWorksStep(db.Model):
 # EMAIL HELPERS
 # ============================================================
 
-LOGO_URL      = 'https://customs.copeaesthetic.studio/static/logo_gold_transparent.png'
+LOGO_URL      = 'https://github.com/copeaestheticcustoms/CustomFlow/blob/6bb9166f269e4a592d14903dd314665bf426b661/static/logo_gold_transparent.png'
 SITE_URL      = 'https://copeaesthetic.studio'
 CUSTOMS_URL   = 'https://customs.copeaesthetic.studio'
 PORTAL_URL    = 'https://app.copeaesthetic.studio'
