@@ -977,6 +977,30 @@ def create_order():
             _email_wrap('Order Received', f'Order #{order_num}', _confirm_body)
         )
 
+        # Notify Buffy that a new order was submitted
+    buffy_email = os.environ.get('ADMIN_EMAIL', 'admin@copeaesthetic.com')
+    if creator:
+        order_num = order.order_number or str(order.id)
+        _admin_order_body = f"""
+        <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
+          A new custom order has just been submitted and is waiting on the free waitlist.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          {_info_row('Order', f'#{order_num}')}
+          {_info_row('Customer', creator.name)}
+          {_info_row('Email', creator.email)}
+          {_info_row('Item', order.item_type or '&mdash;')}
+          {_info_row('Tier', (order.pricing_tier or '&mdash;').capitalize())}
+          {_info_row('Rush', 'Yes' if order.is_rush else 'No', highlight=order.is_rush)}
+        </table>
+        {_primary_button('View Order', PORTAL_URL)}
+        """
+        send_email(
+            buffy_email,
+            f'[New Order] #{order_num} — {creator.name}',
+            _email_wrap('New Order Submitted', f'#{order_num}', _admin_order_body, accent_color='#D8BC84')
+        )
+
     return jsonify({'order': order.to_dict()}), 201
 
 
@@ -1760,6 +1784,47 @@ def approve_mockup(mockup_id):
         )
         db.session.add(revision)
     db.session.commit()
+    # Notify Buffy of customer's decision
+    buffy_email = os.environ.get('ADMIN_EMAIL', 'admin@copeaesthetic.com')
+    customer = User.query.get(order.user_id)
+    order_num = order.order_number or str(order.id)
+    if approved:
+        _approval_body = f"""
+        <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
+          Great news — the customer has approved their mockup for order #{order_num}.
+          This order is ready to move into production.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          {_info_row('Order', f'#{order_num}')}
+          {_info_row('Customer', customer.name if customer else '&mdash;')}
+          {_info_row('Decision', 'Approved ✅', highlight=True)}
+        </table>
+        {_primary_button('View Order', PORTAL_URL)}
+        """
+        send_email(
+            buffy_email,
+            f'[Mockup Approved] Order #{order_num} — Ready for Production',
+            _email_wrap('Mockup Approved', f'Order #{order_num}', _approval_body, accent_color='#D8BC84')
+        )
+    else:
+        _revision_body = f"""
+        <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
+          The customer has requested changes to their mockup for order #{order_num}.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          {_info_row('Order', f'#{order_num}')}
+          {_info_row('Customer', customer.name if customer else '&mdash;')}
+          {_info_row('Decision', 'Changes Requested', highlight=True)}
+          {_info_row('Notes', notes or 'No notes provided')}
+        </table>
+        {_primary_button('View Order', PORTAL_URL)}
+        """
+        send_email(
+            buffy_email,
+            f'[Revision Requested] Order #{order_num} — Customer Wants Changes',
+            _email_wrap('Revision Requested', f'Order #{order_num}', _revision_body, accent_color='#F217A5')
+        )
+    
     return jsonify({
         'mockup': mockup.to_dict(), 'approved': approved,
         'message': 'Mockup approved!' if approved else 'Changes requested — Buffy has been notified.',
