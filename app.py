@@ -578,7 +578,7 @@ def send_email(to_email, subject, html_body, text_body=None):
     try:
         _resend.api_key = api_key
         payload = {
-            'from': 'Cope Aesthetic Customs <onboarding@resend.dev>',
+            'from': 'Cope Aesthetic Customs <noreply@app.copeaesthetic.studio>',
             'to':   to_email,
             'subject': subject,
             'html': html_body,
