@@ -72,7 +72,6 @@
     { id:'booking',    icon:'📅', label:'Booking & Availability',   fn:buildBooking    },
     { id:'influencer', icon:'⭐', label:'Influencer Approvals',     fn:buildInfluencer },
     { id:'users',      icon:'👥', label:'User Management',          fn:buildUsers      },
-    { id:'notifs',     icon:'🔔', label:'Notification Settings',    fn:buildNotifs     },
     { id:'faqs',       icon:'❓', label:'FAQ Management',           fn:buildFaqs       },
     { id:'pricing',    icon:'💰', label:'Items & Pricing',          fn:buildPricing    },
     { id:'howitworks', icon:'🪜', label:'How It Works',             fn:buildHowItWorks },
@@ -515,23 +514,6 @@
       showToast((res && res.data && res.data.error) || 'Failed to remove user.', 'error');
     }
   }
-
-  // ---- NOTIFICATIONS ----
-  function buildNotifs(el) {
-    el.innerHTML = `
-      <div style="font-size:13px;color:var(--txt-m);margin-bottom:16px;">Configure how Buffy and customers receive notifications.</div>
-      <div class="tog-row"><span class="tog-lbl">Email notifications to Buffy</span><label class="toggle"><input type="checkbox" id="nEmail" checked/><span class="tslider"></span></label></div>
-      <div class="tog-row"><span class="tog-lbl">New order alerts</span><label class="toggle"><input type="checkbox" id="nNewOrder" checked/><span class="tslider"></span></label></div>
-      <div class="tog-row"><span class="tog-lbl">Rush order alerts</span><label class="toggle"><input type="checkbox" id="nRush" checked/><span class="tslider"></span></label></div>
-      <div class="tog-row"><span class="tog-lbl">Customer email status updates</span><label class="toggle"><input type="checkbox" id="nCustStatus" checked/><span class="tslider"></span></label></div>
-      <div class="tog-row"><span class="tog-lbl">Customer shipment notifications</span><label class="toggle"><input type="checkbox" id="nShip" checked/><span class="tslider"></span></label></div>
-      <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
-        <button class="btn btn-gld" onclick="saveNotifs()">Save</button>
-        <span id="nSv" style="font-size:12px;color:var(--ok);display:none;">✔ Saved!</span>
-      </div>`;
-  }
-
-  function saveNotifs() { const el=document.getElementById('nSv'); el.style.display='inline'; setTimeout(()=>el.style.display='none',3000); }
 
   // ---- FAQS ----
   let faqs = [];
