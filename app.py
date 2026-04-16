@@ -594,7 +594,6 @@ def send_email(to_email, subject, html_body, text_body=None):
 
 
 def _notify_buffy_special_customer(user, type_label):
-    buffy_email = os.environ.get('ADMIN_EMAIL', 'admin@copeaesthetic.com')
     subject     = f'[Cope Aesthetic] New {type_label} Customer — {user.name}'
     body = f"""
     <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
@@ -611,12 +610,14 @@ def _notify_buffy_special_customer(user, type_label):
     </p>
     {_primary_button('Review Account', PORTAL_URL)}
     """
-    send_email(buffy_email, subject, _email_wrap(
-        'New Special Account',
-        type_label,
-        body,
-        accent_color='#D8BC84'
-    ))
+    admin_users = User.query.filter(User.role.in_(['owner', 'employee'])).all()
+    for admin in admin_users:
+        send_email(admin.email, subject, _email_wrap(
+            'New Special Account',
+            type_label,
+            body,
+            accent_color='#D8BC84'
+        ))
 
 
 # ============================================================
@@ -977,8 +978,7 @@ def create_order():
             _email_wrap('Order Received', f'Order #{order_num}', _confirm_body)
         )
 
-        # Notify Buffy that a new order was submitted
-    buffy_email = os.environ.get('ADMIN_EMAIL', 'admin@copeaesthetic.com')
+        # Notify all admins that a new order was submitted
     if creator:
         order_num = order.order_number or str(order.id)
         _admin_order_body = f"""
@@ -995,11 +995,13 @@ def create_order():
         </table>
         {_primary_button('View Order', PORTAL_URL)}
         """
-        send_email(
-            buffy_email,
-            f'[New Order] #{order_num} — {creator.name}',
-            _email_wrap('New Order Submitted', f'#{order_num}', _admin_order_body, accent_color='#D8BC84')
-        )
+        admin_users = User.query.filter(User.role.in_(['owner', 'employee'])).all()
+        for admin in admin_users:
+            send_email(
+                admin.email,
+                f'[New Order] #{order_num} — {creator.name}',
+                _email_wrap('New Order Submitted', f'#{order_num}', _admin_order_body, accent_color='#D8BC84')
+            )
 
     return jsonify({'order': order.to_dict()}), 201
 
@@ -1784,10 +1786,10 @@ def approve_mockup(mockup_id):
         )
         db.session.add(revision)
     db.session.commit()
-    # Notify Buffy of customer's decision
-    buffy_email = os.environ.get('ADMIN_EMAIL', 'admin@copeaesthetic.com')
+    # Notify all admins of customer's decision
     customer = User.query.get(order.user_id)
     order_num = order.order_number or str(order.id)
+    admin_users = User.query.filter(User.role.in_(['owner', 'employee'])).all()
     if approved:
         _approval_body = f"""
         <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
@@ -1801,11 +1803,12 @@ def approve_mockup(mockup_id):
         </table>
         {_primary_button('View Order', PORTAL_URL)}
         """
-        send_email(
-            buffy_email,
-            f'[Mockup Approved] Order #{order_num} — Ready for Production',
-            _email_wrap('Mockup Approved', f'Order #{order_num}', _approval_body, accent_color='#D8BC84')
-        )
+        for admin in admin_users:
+            send_email(
+                admin.email,
+                f'[Mockup Approved] Order #{order_num} — Ready for Production',
+                _email_wrap('Mockup Approved', f'Order #{order_num}', _approval_body, accent_color='#D8BC84')
+            )
     else:
         _revision_body = f"""
         <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.8;margin:0 0 28px;">
@@ -1819,11 +1822,12 @@ def approve_mockup(mockup_id):
         </table>
         {_primary_button('View Order', PORTAL_URL)}
         """
-        send_email(
-            buffy_email,
-            f'[Revision Requested] Order #{order_num} — Customer Wants Changes',
-            _email_wrap('Revision Requested', f'Order #{order_num}', _revision_body, accent_color='#F217A5')
-        )
+        for admin in admin_users:
+            send_email(
+                admin.email,
+                f'[Revision Requested] Order #{order_num} — Customer Wants Changes',
+                _email_wrap('Revision Requested', f'Order #{order_num}', _revision_body, accent_color='#F217A5')
+            )
     
     return jsonify({
         'mockup': mockup.to_dict(), 'approved': approved,
