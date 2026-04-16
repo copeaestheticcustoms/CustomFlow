@@ -1173,6 +1173,36 @@ def upload_order_image(order_id):
         mockup = Mockup(order_id=order_id, image_url=data['url'], approved=False, revision_limit=3)
         db.session.add(mockup)
     db.session.commit()
+
+    # If this is a mockup upload, email the customer
+    if data['type'] == 'mockup':
+        customer = User.query.get(order.user_id)
+        if customer and customer.notify_email is not False:
+            order_num = order.order_number or str(order.id)
+            _mockup_body = f"""
+            <p style="color:#D8BC84;font-size:22px;font-family:Georgia,serif;font-style:italic;margin:0 0 20px;">
+              Your design is ready.
+            </p>
+            <p style="color:#858488;font-size:15px;font-family:Georgia,serif;line-height:1.9;margin:0 0 28px;">
+              {customer.name}, Buffy has uploaded your custom mockup for order #{order_num}.
+              Head to your portal to review it — approve it to move into production,
+              or request changes if something needs adjusting.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+              {_info_row('Order', f'#{order_num}')}
+              {_info_row('Action Needed', 'Review &amp; Approve Your Mockup', highlight=True)}
+            </table>
+            {_primary_button('Review My Mockup', PORTAL_URL)}
+            <p style="color:#44118C;font-size:12px;font-family:Arial,sans-serif;letter-spacing:1px;margin:24px 0 0;">
+              You have up to 3 free revisions included with your order.
+            </p>
+            """
+            send_email(
+                customer.email,
+                f'Your Mockup is Ready ❖ Order #{order_num}',
+                _email_wrap('Your Mockup is Ready', 'Action Required', _mockup_body)
+            )
+
     return jsonify({'image': image.to_dict()}), 201
 
 
