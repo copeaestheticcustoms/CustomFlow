@@ -1670,12 +1670,12 @@ def get_booking_settings():
         return jsonify({
             'status':     status.value     if status     else 'waitlist',
             'until':      until.value      if until      else '2026-05-18',
-            'message':    message.value    if message    else 'Currently booked through May 18, 2026',
+            'message':    message.value    if message    else '',
             'prod_start': prod_start.value if prod_start else 'May 18, 2026',
-        })
+        }), 200, {'Cache-Control': 'no-store'}
     except Exception:
         return jsonify({'status': 'waitlist', 'until': '2026-05-18',
-                        'message': 'Currently booked through May 18, 2026', 'prod_start': 'May 18, 2026'})
+                        'message': '', 'prod_start': 'May 18, 2026'})
 
 
 @app.route('/api/settings/booking', methods=['PATCH'])
@@ -1685,7 +1685,12 @@ def update_booking_settings():
     try:
         for key in ['booking_status', 'booked_until', 'booking_message', 'prod_start']:
             field = key.replace('booking_', '')
-            val = data.get(field) or data.get(key)
+            if field in data:
+                val = data[field]
+            elif key in data:
+                val = data[key]
+            else:
+                val = None
             if val is not None:
                 setting = Setting.query.get(key)
                 if setting:
@@ -2030,3 +2035,4 @@ if __name__ == '__main__':
         db.create_all()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
